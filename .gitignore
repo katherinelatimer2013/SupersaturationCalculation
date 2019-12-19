@@ -1,0 +1,9 @@
+Workspace_KT/*
+*.asv
+*.mat
+*.png
+*.pptx
+*.txt
+halo compare/*
+ss method compare/*
+SupersaturationCalculation/*

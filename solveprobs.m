@@ -1,0 +1,6 @@
+syms f1 f2 f3 f4 phs pfns pfps pfnd pfpd;
+
+eqns = [f1 == phs*(1 - pfns)*pfnd + (1 - phs)*pfps*(1 - pfpd), ...
+        f2 == phs*(1 - pfns)*(1 - pfnd) + (1 - phs)*pfps*pfpd, ...
+        f3 == phs*pfns*(1 - pfnd) + (1 - phs)*(1 - pfps)*pfpd];
+% solve(eqns, [pfns pfps pfnd pfpd]);

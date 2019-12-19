@@ -6,37 +6,25 @@ classdef misc_halo_analysis
         %%%%%%%%%%%%%%%%%%%%%%%%%
         
         function value = box_dir()
-            value = 'C:\Users\Katherine\Documents\Berkeley Grad\EPSGit';
+            value = 'C:\Users\Katherine\Documents\Berkeley Grad\eps_work\insanity closet';
         end
         
         function value = halo_csv_dir()
             value = fullfile(misc_halo_analysis.box_dir, 'HALO_cleanup_csv');
         end
         
-        function Dp = cdp_diameter(cutoff_bins)
-            if cutoff_bins ~= true
-                Dp = struct('low',[2.5, 2.9, 5, 7.5, 10.2, 11.8, 15.6, 18.7, 20.7, 24.6, 27.4, 29.2, 34.4, 39, 42.5],...
-                            'up',[2.9, 5, 7.5, 10.2, 11.8, 15.6, 18.7, 20.7, 24.6, 27.4, 29.2, 34.4, 39, 42.5, 46],...
-                            'mean',[2.69, 3.81, 6.12, 8.75, 10.97, 13.57, 17.08, 19.67, 22.57, 25.96, 28.29, 31.69, 36.63, 40.71, 44.22]);
-            else
-                Dp = struct('low',[2.9, 5, 7.5, 10.2, 11.8, 15.6, 18.7, 20.7, 24.6, 27.4, 29.2, 34.4, 39, 42.5],...
-                            'up',[5, 7.5, 10.2, 11.8, 15.6, 18.7, 20.7, 24.6, 27.4, 29.2, 34.4, 39, 42.5, 46],...
-                            'mean',[3.81, 6.12, 8.75, 10.97, 13.57, 17.08, 19.67, 22.57, 25.96, 28.29, 31.69, 36.63, 40.71, 44.22]);
-            end
+        function Dp = cdp_diameter()
+        	Dp = struct('low',[2.5, 2.9, 5, 7.5, 10.2, 11.8, 15.6, 18.7, 20.7, 24.6, 27.4, 29.2, 34.4, 39, 42.5],...
+                        'up',[2.9, 5, 7.5, 10.2, 11.8, 15.6, 18.7, 20.7, 24.6, 27.4, 29.2, 34.4, 39, 42.5, 46]);
         end
         
-        function Dp = cas_diameter(cutoff_bins)
+        function Dp = cas_diameter()
             % remaining issue, the first two bins may be aerosols instead
             % of cloud droplet
-            if cutoff_bins ~= true
-                Dp = struct('low',[0.89,0.96,3,5,7.2,15,20,25,30,35,40,45],...
-                            'up',[0.96,3,5,7.2,15,20,25,30,35,40,45,50]);
-            else
-                Dp = struct('low',[3,5,7.2,15,20,25,30,35,40,45],...
-                            'up',[5,7.2,15,20,25,30,35,40,45,50]);
-            end
-                    
+            Dp = struct('low',[0.89,0.96,3,5,7.2,15,20,25,30,35,40,45],...
+                        'up',[0.96,3,5,7.2,15,20,25,30,35,40,45,50]);     
         end
+        
         %%%%%%%%%%%%%%%%%%%
         % Utility methods %
         %%%%%%%%%%%%%%%%%%%
@@ -54,11 +42,8 @@ classdef misc_halo_analysis
         end
         
         function casfile = read_cas_file()
-            %disp('hello again')
             filepattern = '*CAS_DPOL*';
-            %disp(misc_halo_analysis.halo_csv_dir)
             casdir = dir(fullfile(misc_halo_analysis.halo_csv_dir, filepattern));
-            %disp(casdir)
             casfile = make_empty_struct_from_cell({'name','date'});
             for i=1:numel(casdir)
                 casfile(i).('name') = fullfile(misc_halo_analysis.halo_csv_dir, casdir(i).name);
@@ -71,7 +56,6 @@ classdef misc_halo_analysis
         function adlrfile = read_adlr_file()
             filepattern = '*adlr*';
             adlrdir = dir(fullfile(misc_halo_analysis.halo_csv_dir, filepattern));
-            %disp(struct2table(adlrdir))
             adlrfile = make_empty_struct_from_cell({'name','date'});
             for i=1:numel(adlrdir)
                 adlrfile(i).('name') = fullfile(misc_halo_analysis.halo_csv_dir, adlrdir(i).name);
@@ -86,11 +70,9 @@ classdef misc_halo_analysis
         end
         
         function matchfile = read_file_match()
-            %disp('hello')
             cdpfile = misc_halo_analysis.read_cdp_file;
             casfile = misc_halo_analysis.read_cas_file;
             adlrfile = misc_halo_analysis.read_adlr_file;
-            %disp(casfile)
             matchfile = make_empty_struct_from_cell({'cdpname','casname','adlrname','date'});
             n = numel(cdpfile); %% cdp has the least observation days
             
@@ -122,42 +104,57 @@ classdef misc_halo_analysis
             cdpdata = make_empty_struct_from_cell({'utcsec','meandp','nconc'});
             
             cdpdata.utcsec = fix(file(:,1));
-            cdpdata.meandp = file(:,2)/2;% convert from diameter to radius
+            cdpdata.meandp_file = file(:,2);% convert from diameter to radius
             
             cdpdata.effrad_calc_numerator = zeros(size(cdpdata.utcsec));%effective radius as defined in Braga, 2017 
             cdpdata.effrad_calc_denominator = zeros(size(cdpdata.utcsec)); 
             
-            lowdp = misc_halo_analysis.cdp_diameter(cutoff_bins).low;
-            updp = misc_halo_analysis.cdp_diameter(cutoff_bins).up;
+            lowdp = misc_halo_analysis.cdp_diameter().low;
+            updp = misc_halo_analysis.cdp_diameter().up;
             meandp = (lowdp+updp)/2;
 %             dlogdp = log(updp)-log(lowdp);
             
             nconc = zeros(size(cdpdata.utcsec));
+            meandp_time_nconc = zeros(size(cdpdata.utcsec));
             lwc_calc = zeros(size(cdpdata.utcsec)); %calculated using rho_h2o = 1g/cm^3 after Braga, 2017...but their formula is wrong so not using it.
             effrad_calc_numerator = zeros(size(cdpdata.utcsec));
             effrad_calc_denominator = zeros(size(cdpdata.utcsec));
             
+            file_shift = 3;
             if cutoff_bins == true %only take mean diameter >3um (per Braga, 2017)
-                shift = 4;
-            else
-                shift = 3;
+                dp_shift = 1;
+            else               
+                dp_shift = 0;
             end
             
-            for i_bin = 1:numel(lowdp)
-                bin_indx = i_bin + shift;
-                nconc = nconc + file(:,bin_indx)./file(:,3); %third column is sample volume, bins are ptcl count*dlogdp(i_bin)./file(:,3); 
+            chop_bins = false;
+            for i_bin = 1+dp_shift:numel(lowdp)
+                bin_indx = i_bin + file_shift;
+                
+                if i_bin == 1+dp_shift && chop_bins == true
+                    disp('warning: chopping bins!')
+                    chop_factor = 20.0/21.0;
+                    meandp(2) = 4;
+                else
+                    chop_factor = 1.0;
+                end
+                
+                nconc = nconc + chop_factor*file(:,bin_indx)./file(:,3); %third column is sample volume, bins are ptcl count 
+                meandp_time_nconc = meandp_time_nconc + chop_factor*file(:,bin_indx)./file(:,3)*meandp(i_bin);
                 lwc_calc = lwc_calc + 10^(-12)*4*pi/3*(file(:,bin_indx)./file(:,3).*((0.5*meandp(i_bin)).^3));%convert radius to cm
                 effrad_calc_numerator = effrad_calc_numerator + (file(:,bin_indx)./file(:,3).*((0.5*meandp(i_bin)).^3.*(0.5*updp(i_bin) - 0.5*lowdp(i_bin))));
                 effrad_calc_denominator = effrad_calc_denominator + (file(:,bin_indx)./file(:,3).*((0.5*meandp(i_bin)).^2.*(0.5*updp(i_bin) - 0.5*lowdp(i_bin))));
                 
                 % ignore the missing value
-                indx = file(:,bin_indx) < 0;
+                indx = file(:,bin_indx) == 999999;
                 nconc(indx) = nan;
+                meandp_time_nconc(indx) = nan;
                 lwc_calc(indx) = nan;
                 effrad_calc_numerator(indx) = nan;
                 effrad_calc_denominator(indx) = nan;            
             end
             
+            cdpdata.meandp = meandp_time_nconc./nconc;
             cdpdata.nconc = nconc;
             cdpdata.lwc_calc = lwc_calc;
             cdpdata.effrad_calc = effrad_calc_numerator./effrad_calc_denominator;
@@ -173,7 +170,7 @@ classdef misc_halo_analysis
             end
         end
         
-        function casdata = read_cas_data(casname, cutoff_bins, cutoff_effrad)
+        function casdata = read_cas_data(casname, cutoff_bins, cutoff_effrad, change_cas_corr)
             file = csvread(casname, 3, 0);            
             casdata = make_empty_struct_from_cell({'utcsec','meandp','nconc','lwc'});
             
@@ -184,8 +181,8 @@ classdef misc_halo_analysis
             casdata.effrad_calc_numerator = zeros(size(casdata.utcsec));%effective radius as defined in Braga, 2017 (calculate to check against file value)
             casdata.effrad_calc_denominator = zeros(size(casdata.utcsec));           
             
-            lowdp = misc_halo_analysis.cas_diameter(cutoff_bins).low;
-            updp = misc_halo_analysis.cas_diameter(cutoff_bins).up;
+            lowdp = misc_halo_analysis.cas_diameter().low;
+            updp = misc_halo_analysis.cas_diameter().up;
             meandp = (lowdp+updp)/2;
             
             nconc = zeros(size(casdata.utcsec));
@@ -194,24 +191,36 @@ classdef misc_halo_analysis
             effrad_calc_numerator = zeros(size(casdata.utcsec));
             effrad_calc_denominator = zeros(size(casdata.utcsec));
             
+            file_shift = 1;
             if cutoff_bins == true %only take mean diameter >3um (per Braga, 2017)
-                shift = 3;
+                dp_shift = 2;
             else
-                shift = 1;
+                dp_shift = 2;
             end
             
-            for i_bin = 1:numel(lowdp)
-                bin_indx = i_bin + shift;
-                nconc = nconc+file(:,bin_indx);
-                meandp_time_nconc = meandp_time_nconc + file(:,bin_indx)*meandp(i_bin);
-%                 disp(size(lwc_calc))
-%                 disp(size(10^(-12)*4*pi/3*(file(:,bin_indx).*(0.5*meandp(i_bin).^3))))
+            chop_bins = false;
+            for i_bin = 1+dp_shift:numel(lowdp)
+                bin_indx = i_bin + file_shift;
+                if i_bin == 12 && chop_bins
+                    disp('warning: chopping bins!')
+                    chop_factor = 1.0/5.0;
+                    meandp(12) = 45.5;
+                else
+                    chop_factor = 1.0;
+                end
+                
+                if change_cas_corr == true %**note**: only corrects nconc and meandp in current version.
+                    corr_factor = file(:,19).*file(:,20)./file(:,18);
+                else
+                    corr_factor = 1;
+                end
+                
+                nconc = nconc+chop_factor*corr_factor.*file(:,bin_indx);
+                meandp_time_nconc = meandp_time_nconc + chop_factor*corr_factor.*file(:,bin_indx)*meandp(i_bin);
                 lwc_calc = lwc_calc + 10^(-12)*4*pi/3*(file(:,bin_indx).*((0.5*meandp(i_bin)).^3));%convert radius to cm
                 effrad_calc_numerator = effrad_calc_numerator + (file(:,bin_indx).*((0.5*meandp(i_bin)).^3.*(0.5*updp(i_bin) - 0.5*lowdp(i_bin))));
                 effrad_calc_denominator = effrad_calc_denominator + (file(:,bin_indx).*((0.5*meandp(i_bin)).^2.*(0.5*updp(i_bin) - 0.5*lowdp(i_bin))));
-%                 if i_bin == 1
-%                     disp(effrad_calc_denominator)
-%                 end
+
                 % ignore the missing value
                 indx = file(:,bin_indx) < 0;
                 nconc(indx) = nan;
@@ -269,19 +278,19 @@ classdef misc_halo_analysis
         
         % return a data struct including all necessary fields for future
         % calculation/analysis
-        function make_match_data(cutoff_bins, cutoff_temp, cutoff_effrad)
+        function make_match_data(cutoff_bins, cutoff_temp, cutoff_effrad, change_cas_corr)
             matchfile = misc_halo_analysis.read_file_match;
-            %disp(matchfile)
             match = make_empty_struct_from_cell({'utcsec','alt','w','temp','lwc','cas_meandp','cas_nconc','cdp_meandp','cdp_nconc','date'});
             for i_date = 1:numel(matchfile)
                 cdpdata = misc_halo_analysis.read_cdp_data(matchfile(i_date).cdpname, cutoff_bins, cutoff_effrad);
-                casdata = misc_halo_analysis.read_cas_data(matchfile(i_date).casname, cutoff_bins, cutoff_effrad);
+                casdata = misc_halo_analysis.read_cas_data(matchfile(i_date).casname, cutoff_bins, cutoff_effrad, change_cas_corr);
                 adlrdata = misc_halo_analysis.read_adlr_data(matchfile(i_date).adlrname, cutoff_temp);
                 % do data filter based on the utcsec
                 match(i_date).date = matchfile(i_date).date;
                 match(i_date).utcsec = misc_halo_analysis.common_utcsec(extractfield(cdpdata,'utcsec'), extractfield(casdata,'utcsec'), extractfield(adlrdata,'utcsec'));
                 
                 %cdp_indx = ismember(cdpdata.utcsec, match(i_date).utcsec);
+                match(i_date).cdp_meandp_file = misc_halo_analysis.struct_filter(cdpdata, match(i_date).utcsec, 'meandp_file');
                 match(i_date).cdp_meandp = misc_halo_analysis.struct_filter(cdpdata, match(i_date).utcsec, 'meandp');
                 match(i_date).cdp_nconc = misc_halo_analysis.struct_filter(cdpdata, match(i_date).utcsec, 'nconc');
                 match(i_date).cdp_effrad_calc = misc_halo_analysis.struct_filter(cdpdata, match(i_date).utcsec, 'effrad_calc');
@@ -300,13 +309,15 @@ classdef misc_halo_analysis
             end
             
             if cutoff_bins == true
-                save('halo_match_3um_bin_cutoff.mat','match');
+                save('halo_match_3um_bin_cutoff_chopped_v4.mat','match');
             elseif cutoff_temp == true
                 save('halo_match_0C_temp_cutoff.mat','match');
             elseif cutoff_effrad == true
                 save('halo_match_5to13um_effrad_cutoff.mat','match');
+            elseif change_cas_corr == true
+                save('halo_match_change_cas_corr_v2.mat','match');
             else
-                save('halo_match_v2.mat','match');
+                save('halo_match_v15.mat','match');
             end
         end
         

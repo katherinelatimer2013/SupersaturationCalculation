@@ -12,11 +12,11 @@
 
 load('BG_dataset_LAYER0.mat', 'LAYER0_BG');
 load('BG_dataset_LAYER2.mat', 'LAYER2_BG');
-LAYER3_BG.Sf = LAYER0_BG.q./LAYER2_BG.qs - ones(size(LAYER0_BG.q));
+LAYER3_BG.S_fan = LAYER0_BG.q./LAYER2_BG.qs - ones(size(LAYER0_BG.q));
 save('BG_dataset_LAYER3', 'LAYER3_BG');
 clear;
 
 load('PI_dataset_LAYER0.mat', 'LAYER0_PI');
 load('PI_dataset_LAYER2.mat', 'LAYER2_PI');
-LAYER3_PI.Sf = LAYER0_PI.q./LAYER2_PI.qs - ones(size(LAYER0_PI.q));
+LAYER3_PI.S_fan = LAYER0_PI.q./LAYER2_PI.qs - ones(size(LAYER0_PI.q));
 save('PI_dataset_LAYER3', 'LAYER3_PI');

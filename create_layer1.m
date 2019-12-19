@@ -7,7 +7,7 @@
 %%% Output files: BG_dataset_LAYER1.mat,
 %%%               PI_dataset_LAYER1.mat
 
-%%% constants - copied from explore_GOAMAZON.m from Qindan; using 'sim-fixed-dl'%%%
+%%% constants - those for A copied from explore_GOAMAZON.m from Qindan; using 'sim-fixed-dl'%%%
 Cp = 1005;     % Thermocapacity of dry air under constant pressure
 g = 9.81;      % gravitational accel (m/s^2)
 L = 2501000;   % latent heat of evaporation of water

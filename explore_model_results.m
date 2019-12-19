@@ -269,6 +269,7 @@ classdef explore_model_results
             
             save('read_wrf_study_domain_fan','BG','PI','lon','lat','height');
         end
+        
         % plot procedure
         function plot_wrf_study_domain()
             data = load('read_wrf_study_domain_fan.mat');
